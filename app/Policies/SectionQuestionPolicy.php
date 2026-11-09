@@ -35,7 +35,8 @@ class SectionQuestionPolicy
         }
 
         if ($auth->role === UserRole::Coach) {
-            return false;
+            // return false;  20261109 下記に修正　MN
+            return $this->assignedCoach($auth, $question->section->chapter->part->certification); // 20261109 権限追加 MN
         }
 
         if ($question->status !== ContentStatus::Published) {
@@ -76,7 +77,8 @@ class SectionQuestionPolicy
     {
         return match ($auth->role) {
             UserRole::Admin => true,
-            UserRole::Coach => false,
+                // UserRole::Coach => false,  20261109 下記に修正　MN
+            UserRole::Coach => $this->assignedCoach($auth, $certification),  // 20261109 権限追加 MN
             default => false,
         };
     }
