@@ -23,7 +23,8 @@ class PartPolicy
     {
         return match ($auth->role) {
             UserRole::Admin => true,
-            UserRole::Coach => false,
+                // UserRole::Coach => false,  20261109 下記に修正　MN
+            UserRole::Coach => $this->assignedCoach($auth, $certification),  // 20261109 権限追加 MN
             default => false,
         };
     }
@@ -32,7 +33,8 @@ class PartPolicy
     {
         return match ($auth->role) {
             UserRole::Admin => true,
-            UserRole::Coach => false,
+                // UserRole::Coach => false,  20261109 下記に修正　MN
+            UserRole::Coach => $this->assignedCoach($auth, $part->certification),  // 20261109 権限追加 MN
             default => $part->status === ContentStatus::Published,
         };
     }
@@ -71,7 +73,8 @@ class PartPolicy
     {
         return match ($auth->role) {
             UserRole::Admin => true,
-            UserRole::Coach => false,
+                // UserRole::Coach => false,  20261109 下記に修正　MN
+            UserRole::Coach => $this->assignedCoach($auth, $certification),  // 20261109 権限追加 MN
             default => false,
         };
     }

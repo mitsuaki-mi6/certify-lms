@@ -42,8 +42,15 @@ class QuestionCategoryPolicy
     {
         return match ($auth->role) {
             UserRole::Admin => true,
-            UserRole::Coach => false,
+                // UserRole::Coach => false,  20261109 下記に修正　MN
+            UserRole::Coach => $this->assignedCoach($auth, $certification),  // 20261109 権限追加 MN
             default => false,
         };
+    }
+
+    //  以下を追記　20261109
+    private function assignedCoach(User $coach, Certification $certification): bool
+    {
+        return $certification->coaches()->where('users.id', $coach->id)->exists();
     }
 }
