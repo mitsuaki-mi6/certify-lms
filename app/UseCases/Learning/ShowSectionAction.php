@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\MarkdownRenderingService;
 use App\Services\SectionQuestionScoreService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use App\Enums\CertificationStatus; // 20261114 追加　MN
 
 /**
  * /learning/sections/{section} (5 階層目、Section 詳細) のデータを準備する Action。
@@ -34,18 +35,21 @@ final class ShowSectionAction
         $chapter = $section->chapter;
         $part = $chapter?->part;
 
-        if ($section->status !== ContentStatus::Published
+        if (
+            $section->status !== ContentStatus::Published
             || $chapter === null || $chapter->status !== ContentStatus::Published
-            || $part === null || $part->status !== ContentStatus::Published) {
+            || $part === null || $part->status !== ContentStatus::Published
+            || $part->certification === null || $part->certification->status !== CertificationStatus::Published
+        ) {
             throw new NotFoundHttpException;
-        }
+        } // certification status 判定を追加　20261114 MN
 
         $siblingSections = $chapter->sections()
             ->where('status', ContentStatus::Published->value)
             ->ordered()
             ->get();
 
-        $currentIndex = $siblingSections->search(fn ($s) => $s->id === $section->id);
+        $currentIndex = $siblingSections->search(fn($s) => $s->id === $section->id);
         $prevSection = $currentIndex !== false && $currentIndex > 0
             ? $siblingSections->get($currentIndex - 1)
             : null;
