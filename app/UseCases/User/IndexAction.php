@@ -25,7 +25,10 @@ final class IndexAction
     ): LengthAwarePaginator {
         $query = User::query();
 
-        $query->withTrashed();
+        // $query->withTrashed();   削除：無条件にwithTrashed()を呼ぶのをやめる  20261115 MN
+        if ($status === UserStatus::Withdrawn) {
+            $query->withTrashed();
+        }  //  退会済が選ばれたときだけ、withTrashed()を適用するように変更  20261115 MN
 
         if ($keyword !== null && $keyword !== '') {
             $query->where(function ($q) use ($keyword) {
