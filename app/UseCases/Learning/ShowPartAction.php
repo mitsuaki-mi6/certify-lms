@@ -43,6 +43,10 @@ final class ShowPartAction
         $enrollment = $student->enrollments()
             ->where('certification_id', $part->certification_id)
             ->first();
+        // 受講未登録の場合は直リンクをブロックして403を返す処理を追加　20261117 MN
+        if ($enrollment === null) {
+            abort(403);
+        }
 
         $completedByChapter = [];
         if ($enrollment !== null && $chapters->isNotEmpty()) {
