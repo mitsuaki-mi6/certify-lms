@@ -81,8 +81,8 @@ class MeetingController extends Controller
         $query = Meeting::query()
             ->with(['enrollment.certification', 'student'])
             ->forCoach($request->user())
-            ->when($studentId, fn ($q, $id) => $q->where('student_id', $id))
-            ->when($enrollmentId, fn ($q, $id) => $q->where('enrollment_id', $id));
+            ->when($studentId, fn($q, $id) => $q->where('student_id', $id))
+            ->when($enrollmentId, fn($q, $id) => $q->where('enrollment_id', $id));
 
         // upcoming: 次の面談を一番上に置く (昇順) / past + all: 直近の活動を一番上 (降順)
         $meetings = match ($filter) {
@@ -146,7 +146,7 @@ class MeetingController extends Controller
     {
         $user = auth()->user();
         $enrollments = $user
-            ?->enrollments()
+                ?->enrollments()
             ->whereIn('status', [EnrollmentStatus::Learning->value, EnrollmentStatus::Passed->value])
             ->with('certification')
             ->get();
@@ -172,16 +172,7 @@ class MeetingController extends Controller
         $topic = $request->validated('topic');
         $student = $enrollment->user;
 
-        $meeting = DB::transaction(function () use (
-            $enrollment,
-            $student,
-            $scheduledAt,
-            $topic,
-            $availabilityService,
-            $coachLoadService,
-            $quotaService,
-            $consumeAction,
-        ) {
+        $meeting = DB::transaction(function () use ($enrollment, $student, $scheduledAt, $topic, $availabilityService, $coachLoadService, $quotaService, $consumeAction, ) {
             if ($quotaService->remaining($student) < 1) {
                 throw new InsufficientMeetingQuotaException;
             }
@@ -233,7 +224,7 @@ class MeetingController extends Controller
 
         $actor = auth()->user();
 
-        DB::transaction(function () use ($meeting, $actor) {
+        DB::transaction(function () use ($meeting, $actor, $refundAction) { // $refundAction を追加  20291117  MN
             $locked = Meeting::query()->whereKey($meeting->id)->lockForUpdate()->first();
             if ($locked === null || $locked->status !== MeetingStatus::Reserved) {
                 throw MeetingStatusTransitionException::forCancel();
@@ -242,6 +233,9 @@ class MeetingController extends Controller
             if ($locked->scheduled_at->lessThanOrEqualTo(now())) {
                 throw new MeetingAlreadyStartedException;
             }
+
+            // 受講生・コーチどちらがキャンセルしても受講生の面談回数を返却(+1)する処理を追加  20261117  MN
+            ($refundAction)($locked->student, $locked->id);
 
             $locked->update([
                 'status' => MeetingStatus::Canceled->value,
@@ -263,7 +257,7 @@ class MeetingController extends Controller
         $body = $request->validated('body');
 
         DB::transaction(function () use ($meeting, $body) {
-            if (! in_array($meeting->status, [MeetingStatus::Reserved, MeetingStatus::Completed], true)) {
+            if (!in_array($meeting->status, [MeetingStatus::Reserved, MeetingStatus::Completed], true)) {
                 throw MeetingStatusTransitionException::forMemo();
             }
 
@@ -291,7 +285,7 @@ class MeetingController extends Controller
 
         return response()->json([
             'date' => $date->toDateString(),
-            'slots' => $slots->map(fn (array $slot) => [
+            'slots' => $slots->map(fn(array $slot) => [
                 'slot_start' => $slot['slot_start']->toIso8601String(),
                 'slot_end' => $slot['slot_end']->toIso8601String(),
                 'available_coach_count' => $slot['available_coach_count'],
