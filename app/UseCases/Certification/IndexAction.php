@@ -33,7 +33,8 @@ final class IndexAction
         $query->keyword($keyword);
 
         if ($status !== null) {
-            $query->where('status', CertificationStatus::Draft->value);
+            //     $query->where('status', CertificationStatus::Draft->value);  Draft設定を削除  20261117  MN
+            $query->where('status', $status->value);  //  引数で受け取った $status の利用に修正  20261117  MN
         }
 
         if ($categoryId !== null && $categoryId !== '') {
