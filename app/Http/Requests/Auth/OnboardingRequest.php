@@ -29,7 +29,7 @@ class OnboardingRequest extends FormRequest
         $rules = [
             'name' => ['required', 'string', 'max:50'],
             'bio' => ['nullable', 'string', 'max:1000'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],  //  confirmed を追記  20261120  MN
         ];
 
         if ($this->invitedRole() === UserRole::Coach) {
