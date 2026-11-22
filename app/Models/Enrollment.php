@@ -170,7 +170,10 @@ class Enrollment extends Model
     {
         return match ($user->role) {
             UserRole::Admin => $query,
-            UserRole::Coach => $query,
+            UserRole::Coach => $query->whereHas(
+                'certification.coaches',
+                fn(Builder $q) => $q->where('users.id', $user->id),
+            ),  // 割り当てられた担当資格とする処理に修正  20261122  MN
             UserRole::Student => $query->where('user_id', $user->id),
             default => $query->whereRaw('1 = 0'),
         };
