@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use Closure;
+use App\Enums\UserStatus;  //  20261122  追加  MN
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+
 
 /**
  * 受講中(in_progress)以外のユーザーをプラン機能から弾く Middleware。
@@ -20,8 +22,7 @@ final class EnsureActiveLearning
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-
-        if ($user === null) {
+        if ($user === null || $user->status !== UserStatus::InProgress) {  //  受講中(in_progress)以外のユーザーをプラン機能から弾く status !== UserStatus::InProgress を追記  20261122  mn
             abort(403, 'プラン期間が満了しました。プラン機能はご利用いただけません。プロフィール / 修了証は引き続きアクセス可能です。');
         }
 
