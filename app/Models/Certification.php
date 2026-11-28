@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\QaThread;  // 20261128 追加　MN
 
 /**
  * 資格マスタを表す Model。受講生カタログ・admin マスタ管理・修了証発行・教材階層の親として参照される。
@@ -138,7 +139,7 @@ class Certification extends Model
     {
         return $query->whereHas(
             'coaches',
-            fn (Builder $q) => $q->where('users.id', $coach->id),
+            fn(Builder $q) => $q->where('users.id', $coach->id),
         );
     }
 
@@ -161,6 +162,16 @@ class Certification extends Model
             return $query;
         }
 
-        return $query->where('name', 'LIKE', '%'.$keyword.'%');
+        return $query->where('name', 'LIKE', '%' . $keyword . '%');
+    }
+
+    /**
+     * 資格に紐づく質問掲示板のスレッド一覧。  20261128 追加 MN
+     *
+     * @return HasMany<QaThread, $this>
+     */
+    public function qaThreads(): HasMany
+    {
+        return $this->hasMany(QaThread::class, 'certification_id');
     }
 }

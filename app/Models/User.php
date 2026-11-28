@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\QaReply;  // 20261128 追加　MN
+use App\Models\QaThread;  // 20261128 追加　MN
 
 /**
  * プラン受講中のユーザーを表す Model。
@@ -295,7 +297,7 @@ class User extends Authenticatable
      */
     public function receivesBroadcastNotificationsOn(): string
     {
-        return 'notifications.'.$this->id;
+        return 'notifications.' . $this->id;
     }
 
     /**
@@ -309,5 +311,25 @@ class User extends Authenticatable
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereIn('status', [UserStatus::InProgress, UserStatus::Graduated]);
+    }
+
+    /**
+     * 質問掲示板のスレッド一覧。ユーザーが作成したスレッドを取得する。  20261128 追加　MN
+     *
+     * @return HasMany<QaThread, $this>
+     */
+    public function qaThreads(): HasMany
+    {
+        return $this->hasMany(QaThread::class, 'user_id');
+    }
+
+    /**
+     * 質問に対する回答一覧。ユーザーが作成した回答を取得する。  20261128 追加　MN
+     *
+     * @return HasMany<QaReply, $this>
+     */
+    public function qaReplies(): HasMany
+    {
+        return $this->hasMany(QaReply::class, 'user_id');
     }
 }
